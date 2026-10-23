@@ -1,0 +1,29 @@
+:host {
+  display: block;
+  transition: width 0.3s ease;
+  height: 100%;
+}
+
+:host(.collapsed) .menu-item.logout button span {
+  display: none;
+}
+
+:host(.collapsed) .menu-item.logout button i {
+  margin-right: 0px;
+}
+
+:host(.collapsed) .sidebar {
+  width: 60px;
+  padding: 1rem 0;
+}
+
+.active-link {
+  background-color: var(--p-primary-50) !important;
+  color: var(--p-primary-600) !important;
+  
+  i {
+    color: var(--p-primary-600) !important;
+  }
+}
+
+.no-underline { text-decoration: none; }

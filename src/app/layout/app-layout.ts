@@ -41,7 +41,7 @@ import { SidebarComponent } from './sidebar/sidebar';
         
         <div class="perfil-wrapper flex align-items-center gap-3 cursor-pointer p-2 border-round hover:surface-100 transition-duration-200" routerLink="/profile">
           <div class="text-right">
-            <span class="block font-bold text-900">Usuario Admin</span>
+            <span class="block font-bold text-900">{{ currentUser?.username || 'Invitado' }}</span>
             <small class="block text-600">En línea</small>
           </div>
           <p-image src="/mockups/images/default.png" alt="profile" width="45" imageClass="border-circle shadow-2"></p-image>
@@ -55,9 +55,7 @@ import { SidebarComponent } from './sidebar/sidebar';
         </p-card>
         
         <main class="flex-1 transition-all transition-duration-300">
-           <p-card class="h-full shadow-2 border-none">
-              <router-outlet></router-outlet>
-           </p-card>
+           <router-outlet></router-outlet>
         </main>
         
       </div>
@@ -68,7 +66,7 @@ import { SidebarComponent } from './sidebar/sidebar';
     }
 
     <footer class="py-3 text-center surface-100 text-600 text-sm">
-      <p>© 2026 Admin Dashboard • México-USA Logistics</p>
+      <p>© 2026 TCG Engine Dashboard • RookNoxx</p>
     </footer>
   `,
   styles: [`
@@ -101,6 +99,8 @@ export class AppComponent implements OnInit {
   showLayout = true;
   loading: boolean = false;
 
+  currentUser: any = null;
+
   constructor(
     private router: Router,
     private layoutService: LayoutService,
@@ -108,6 +108,12 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    const userStr = localStorage.getItem('current_user');
+
+    if (userStr) {
+      this.currentUser = JSON.parse(userStr);
+    }
+
     this.router.events.subscribe((event: Event) => {
       
       if (event instanceof NavigationStart) {

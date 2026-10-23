@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component } from "@angular/core";
+import { Component, OnDestroy } from "@angular/core";
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from "@angular/router";
 import { MessageService } from 'primeng/api';
@@ -8,6 +8,8 @@ import { CardModule } from "primeng/card";
 import { InputTextModule } from 'primeng/inputtext';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ToastModule } from 'primeng/toast';
+import { Subscription } from 'rxjs';
+import { AuthService } from "@/app/core/services/auth.service";
 
 @Component({
   selector: 'app-login',
@@ -25,21 +27,23 @@ import { ToastModule } from 'primeng/toast';
     RouterModule
   ],
 })
-export class Login {
+export class Login implements OnDestroy {
   loading: boolean = false;
   loginForm: FormGroup;
   forgottenForm: FormGroup;
   forgottenPassword: boolean = false;
+  private authSub: Subscription = new Subscription();
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private _messageService: MessageService,
+    private authService: AuthService
   ){
-    // Ya viene pre-llenado para que sea más fácil probar el mockup
+    // Cambiamos email por username para que coincida con la API
     this.loginForm = this.fb.group({
-      email: ['admin@logistics.com', [Validators.required, Validators.email]],
-      password: ['123456', Validators.required]
+      username: ['', Validators.required],
+      password: ['', Validators.required]
     });
     
     this.forgottenForm = this.fb.group({
@@ -54,33 +58,36 @@ export class Login {
     }
 
     this.loading = true;
-    
-    // Simulamos el tiempo de respuesta del servidor (1.5 segundos)
-    setTimeout(() => {
-      this.loading = false;
-      const { email } = this.loginForm.value;
-      
-      this._messageService.add({ severity: 'success', summary: 'Bienvenido', detail: `Hola ${email}` });
-      
-      // Navegamos al dashboard (ruta raíz '/')
-      setTimeout(() => {
-        this.router.navigate(['/']);
-      }, 1000);
-    }, 1500);
+    const { username, password } = this.loginForm.value;
+
+    this.authSub = this.authService.login(username, password).subscribe({
+      next: (res: any) => {
+        this.loading = false;
+        // Solo permitimos el acceso si el usuario es administrador (permission 10)
+        if (res.permission_level >= 10) {
+            this._messageService.add({ severity: 'success', summary: 'Bienvenido', detail: `Hola ${res.username}` });
+            this.router.navigate(['/']);
+        } else {
+            this.authService.logout();
+            this._messageService.add({ severity: 'error', summary: 'Acceso Denegado', detail: 'No tienes permisos de administrador.' });
+        }
+      },
+      error: (err: any) => {
+        this.loading = false;
+        // La API Node.js suele enviar el error en err.error.error
+        const errorMsg = err.error?.error || 'Error al conectar con el servidor';
+        this._messageService.add({ severity: 'error', summary: 'Error de Autenticación', detail: errorMsg });
+      }
+    });
   }
 
   recoverPassword() {
-    if (this.forgottenForm.invalid) {
-      this._messageService.add({ severity: 'error', summary: 'Error', detail: 'Ingresa un correo válido' });
-      return;
-    }
+    // Aquí implementaremos la llamada a la API de recuperación más adelante
+    if (this.forgottenForm.invalid) return;
+    this._messageService.add({ severity: 'info', summary: 'En desarrollo', detail: 'Función próximamente disponible' });
+  }
 
-    // Simulamos el envío de correo
-    this._messageService.add({ severity: 'success', summary: 'Enviado', detail: 'Revisa tu bandeja de entrada' });
-    
-    setTimeout(() => {
-      this.forgottenPassword = false;
-      this.forgottenForm.reset();
-    }, 1500);
+  ngOnDestroy() {
+    this.authSub.unsubscribe();
   }
 }

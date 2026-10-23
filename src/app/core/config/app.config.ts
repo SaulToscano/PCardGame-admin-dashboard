@@ -13,17 +13,7 @@ import { environment } from '@env/environment';
 
 import { routes } from '@/app/app.routes';
 
-import { HomeApiService } from '@core/services/home-api.service';
-import { HomeGateway } from '@domain/models/home/gateway/home-gateway';
-
-import { UserApiService } from '@core/services/user-api.service';
-import { UserGateway } from '@domain/models/user/gateway/user-gateway';
-
-import { ClientApiService } from '@core/services/client-api.service';
-import { ClientGateway } from '@domain/models/client/gateway/client-gateway';
-
-import { RoleGateway } from '@domain/models/role/gateway/role-gateway';
-import { RoleApiService } from '../services/role-api.service';
+import { authInterceptor } from '../interceptors/auth.interceptor';
 
 export interface AppConfig {
   apiBaseUrl: string;
@@ -41,6 +31,7 @@ export const appConfig: ApplicationConfig = {
       withInterceptors([
         // exceptionInterceptor,
         // httpInterceptor
+        authInterceptor,
       ]),
     ),
     providePrimeNG({
@@ -59,10 +50,5 @@ export const appConfig: ApplicationConfig = {
         loggingEnabled: environment.loggingEnabled,
       },
     },
-    // features providers
-    { provide: HomeGateway, useClass: HomeApiService },
-    { provide: UserGateway, useClass: UserApiService },
-    { provide: ClientGateway, useClass: ClientApiService },
-    { provide: RoleGateway, useClass: RoleApiService },
   ],
 };

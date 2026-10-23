@@ -1,5 +1,5 @@
 export const environment = {
     production: true,
-    apiBaseUrl: 'http://localhost:8080/api',
+    apiBaseUrl: 'https://pcardgame-api.saul-toscano.fyi',
     loggingEnabled: false,
   };

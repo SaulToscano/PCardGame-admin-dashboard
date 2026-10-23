@@ -1,16 +1,14 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostBinding } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Component, HostBinding, OnInit } from '@angular/core';
+import { RouterModule, Router } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
-//import { AuthService } from '../../core/auth/auth.service';
-import { Router } from "@angular/router";
-
+import { AuthService } from '../../core/services/auth.service';
 import { SidebarToggleButtonComponent } from '../sidebar-toggle-button/sidebar-toggle-button';
 
 interface CustomMenuItem extends MenuItem {
-  permission?: string;
+  permission_level?: number;
 }
 
 @Component({
@@ -25,35 +23,45 @@ interface CustomMenuItem extends MenuItem {
     SidebarToggleButtonComponent,
   ],
 })
-export class SidebarComponent {
+export class SidebarComponent implements OnInit {
   @HostBinding('class.collapsed') collapsed = false;
+  userPermissionLevel = 0; // Por defecto es 0
 
   constructor(
-    //private readonly _authService: AuthService,
-    private readonly _router: Router
+    private readonly authService: AuthService,
+    private readonly router: Router
   ) {}
 
+  ngOnInit() {
+    const userStr = localStorage.getItem('current_user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      this.userPermissionLevel = user.permission_level || 0;
+    }
+  }
+
+  // Rutas accesibles para todos los usuarios logueados (incluso nivel 1)
   menuItems: CustomMenuItem[] = [
     { label: "Home", icon: "pi pi-objects-column", routerLink: "/" },
   ];
 
+  // Rutas exclusivas para Administradores (nivel 10)
   adminMenuItem: CustomMenuItem[] = [
     { label: "Usuarios", icon: "pi pi-users", routerLink: "/users" },
-    { label: "Clientes", icon: "pi pi-users", routerLink: "/clients" },
-    { label: "Roles", icon: "pi pi-shield", routerLink: "/roles" },
+    // Aquí puedes agregar: { label: "Cartas", icon: "pi pi-clone", routerLink: "/cards" }
   ];
 
   get filteredMenuItems(): CustomMenuItem[] {
-    return this.menuItems.filter((item) => !item.permission /* || this._authService.hasPermission(item.permission) */);
+    return this.menuItems;
   }
 
   get filteredAdminMenuItems(): CustomMenuItem[] {
-    return this.adminMenuItem.filter((item) => !item.permission /* || this._authService.hasPermission(item.permission) */);
+    return this.adminMenuItem;
   }
 
   isAdmin() {
-    return true
-    //return this._authService.getUserRole()?.name === 'ADMIN' || this._authService.getUserRole()?.name === 'SUPERADMIN';
+    // Solo muestra la sección de administración si el nivel es 10
+    return this.userPermissionLevel === 10;
   }
 
   toggleSidebar() {
@@ -61,7 +69,7 @@ export class SidebarComponent {
   }
 
   logout() {
-    //this._authService.logout();
-    this._router.navigate(["/login"]);
+    this.authService.logout();
+    this.router.navigate(['/auth/login']);
   }
 }

@@ -19,8 +19,8 @@
       @if (!forgottenPassword) {
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="flex flex-column gap-4">
           <div class="flex flex-column gap-2">
-            <label htmlFor="email" class="font-medium text-900">Correo Electrónico</label>
-            <input pInputText id="email" type="email" formControlName="email" class="w-full p-3" />
+            <label htmlFor="username" class="font-medium text-900">Nombre de Usuario</label>
+            <input pInputText id="username" type="text" formControlName="username" class="w-full p-3" />
           </div>
 
           <div class="flex flex-column gap-2">
@@ -58,7 +58,7 @@
       }
 
       <div class="absolute bottom-0 left-50 pb-4" style="transform: translateX(-50%);">
-        <span class="text-500 text-sm font-medium">México-USA Logistics © 2026</span>
+        <span class="text-500 text-sm font-medium">TCG Engine Dashboard © 2026</span>
       </div>
     </div>
 

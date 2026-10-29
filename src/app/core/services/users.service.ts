@@ -14,4 +14,8 @@ export class UsersService {
   getUsers(): Observable<User[]> {
     return this.http.get<User[]>(`${this.config.apiBaseUrl}/users`);
   }
+
+  updateUser(userId: string, userData: Partial<User>): Observable<User> {
+    return this.http.post<User>(`${this.config.apiBaseUrl}/users/admin/edit/${userId}`, userData);
+  }
 }

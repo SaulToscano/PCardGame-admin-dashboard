@@ -18,7 +18,8 @@
           <th pSortableColumn="coins" class="text-center">Monedas <p-sortIcon field="coins"></p-sortIcon></th>
           <th pSortableColumn="xp" class="text-center">XP <p-sortIcon field="xp"></p-sortIcon></th>
           <th pSortableColumn="elo" class="text-center">ELO <p-sortIcon field="elo"></p-sortIcon></th>
-          <th class="text-center">Nivel Permiso</th>
+          <th class="text-center">Permiso</th>
+          <th class="text-center">Acciones</th>
         </tr>
       </ng-template>
       
@@ -30,11 +31,13 @@
           <td class="text-center font-medium text-green-600">{{ user.xp }}</td>
           <td class="text-center font-bold text-primary">{{ user.elo }}</td>
           <td class="text-center">
-            <!-- Usamos un Tag visual para diferenciar administradores de jugadores -->
             <p-tag 
               [value]="user.permission_level >= 5 ? 'Admin/Server' : 'Jugador'" 
               [severity]="user.permission_level >= 5 ? 'danger' : 'info'">
             </p-tag>
+          </td>
+          <td class="text-center">
+            <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info" (onClick)="openEdit(user)"></p-button>
           </td>
         </tr>
       </ng-template>
@@ -50,3 +53,117 @@
     </p-table>
   </p-card>
 </div>
+
+<!-- Modal para editar usuario y sus cartas -->
+<p-dialog 
+  header="Editar Usuario" 
+  [(visible)]="displayEditDialog" 
+  [modal]="true" 
+  [style]="{width: '60vw', minWidth: '400px'}"
+  [maximizable]="true">
+  
+  @if (selectedUser) {
+    <div class="p-fluid grid mt-2">
+      <!-- Estadísticas Generales -->
+      <div class="col-12 md:col-6 field">
+        <label class="font-bold">Monedas</label>
+        <p-inputNumber [(ngModel)]="selectedUser.coins"></p-inputNumber>
+      </div>
+      <div class="col-12 md:col-6 field">
+        <label class="font-bold">XP</label>
+        <p-inputNumber [(ngModel)]="selectedUser.xp"></p-inputNumber>
+      </div>
+      <div class="col-12 md:col-6 field">
+        <label class="font-bold">ELO</label>
+        <p-inputNumber [(ngModel)]="selectedUser.elo"></p-inputNumber>
+      </div>
+      <div class="col-12 md:col-6 field">
+        <label class="font-bold">Nivel de Permiso</label>
+        <p-inputNumber [(ngModel)]="selectedUser.permission_level"></p-inputNumber>
+      </div>
+
+      <!-- Gestión de Cartas -->
+      <div class="col-12 mt-4">
+        
+        <!-- Header con Buscador y Botón de Añadir -->
+        <div class="flex justify-content-between align-items-center mb-3">
+          <div class="flex align-items-center gap-3">
+            <h3 class="m-0">Cartas del Usuario</h3>
+            
+            <!-- Input de búsqueda moderno de PrimeNG -->
+            <p-iconField iconPosition="left">
+              <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
+              <input 
+                pInputText 
+                type="text" 
+                (input)="dtCards.filterGlobal($any($event.target).value, 'contains')" 
+                placeholder="Buscar por ID..." />
+            </p-iconField>
+            
+          </div>
+          <p-button icon="pi pi-plus" label="Añadir Carta" size="small" (onClick)="addCardRow()"></p-button>
+        </div>
+
+        <!-- Tabla con referencia #dtCards y campos de filtro global -->
+        <p-table 
+          #dtCards 
+          [value]="selectedUser.cards || []" 
+          [globalFilterFields]="['tid']" 
+          class="p-datatable-sm">
+          
+          <ng-template pTemplate="header">
+            <tr>
+              <th>TID (ID Carta)</th>
+              <th>Variante</th>
+              <th>Cantidad</th>
+              <th>Estrellas</th>
+              <th style="width: 3rem"></th>
+            </tr>
+          </ng-template>
+          
+          <ng-template pTemplate="body" let-card let-rowIndex="rowIndex">
+            <tr [ngClass]="{'bg-red-100': isDuplicateCard(card, selectedUser.cards)}">
+              <td>
+                <p-select 
+                  [options]="availableCards" 
+                  [(ngModel)]="card.tid" 
+                  optionLabel="tid" 
+                  optionValue="tid" 
+                  [filter]="true" 
+                  filterBy="tid" 
+                  placeholder="Seleccionar carta" 
+                  appendTo="body" 
+                  [style]="{'width':'100%'}">
+                </p-select>
+              </td>
+              <td>
+                <p-select 
+                  [options]="variantOptions" 
+                  [(ngModel)]="card.variant" 
+                  optionLabel="label" 
+                  optionValue="value" 
+                  appendTo="body" 
+                  [style]="{'width':'100%'}">
+                </p-select>
+              </td>
+              <td><p-inputNumber [(ngModel)]="card.quantity" [showButtons]="true" [min]="1"></p-inputNumber></td>
+              <td><p-inputNumber [(ngModel)]="card.stars" [showButtons]="true" [min]="0" [max]="3"></p-inputNumber></td>
+              <td>
+                <p-button icon="pi pi-trash" [rounded]="true" severity="danger" [text]="true" (onClick)="removeCardRow(rowIndex)"></p-button>
+              </td>
+            </tr>
+          </ng-template>
+          
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="5" class="text-center">No se encontraron cartas.</td></tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayEditDialog = false"></p-button>
+    <p-button label="Guardar Cambios" icon="pi pi-check" [loading]="saving" (onClick)="saveUser()"></p-button>
+  </ng-template>
+</p-dialog>
